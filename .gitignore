@@ -1,13 +1,3 @@
 # IntellijIdea files
 .idea/
 .DS_Store
-.vscode/
-assets/css
-assets/scss
-node_modules/
-.bashrc
-.bashrc.swp
-.prettierrc
-gulpfile.js
-
-yarn.lock

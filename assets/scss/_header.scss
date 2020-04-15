@@ -1,0 +1,12 @@
+.header {
+  margin-bottom: $gap * 4;
+
+  @include md {
+    margin-bottom: 0;
+  }
+
+  @include sm-xs {
+    margin-bottom: 0;
+  }
+
+}
