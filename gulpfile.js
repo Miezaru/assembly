@@ -26,6 +26,14 @@ const PATH = {
     '!./assets/js/**/*.min.js',
     '!./assets/js/all.js', // Исключение, если находится в jsFolder (иначе конкатенирует себя)
   ],
+  cssFiles: [
+    './assets/css/**/*.css',
+    '!./assets/css/style.css',
+    '!./assets/css/main.css',
+    '!./assets/css/main.min.css',
+  ],
+  cssFile: './assets/css/main.css',
+  cssBundleName: 'main.css',
   jsFolder: './assets/js',
   jsDestFolder: './assets/dest/js',
   jsDestFiles: './assets/dest/js/*.js',
@@ -45,6 +53,7 @@ function scss() {
   return src(PATH.scssFile)
     .pipe(sass({ outputStyle: 'expanded' }).on('error', sass.logError))
     .pipe(postcss(PLUGINS))
+    .pipe(rename('style.css'))
     .pipe(dest(PATH.cssFolder))
     .pipe(
       notify({
@@ -59,6 +68,7 @@ function scssDev() {
   return src(PATH.scssFile, { sourcemaps: true })
     .pipe(sass({ outputStyle: 'expanded' }).on('error', sass.logError))
     .pipe(postcss(PLUGINS))
+    .pipe(rename('style.css'))
     .pipe(dest(PATH.cssFolder, { sourcemaps: true }))
     .pipe(
       notify({
@@ -84,6 +94,29 @@ function scssMin() {
       })
     )
     .pipe(browserSync.reload({ stream: true }));
+}
+
+function cssMin() {
+  const pluginsExtended = PLUGINS.concat([cssnano({ preset: 'default' })]);
+
+  return src(PATH.cssFile)
+    .pipe(sass({ outputStyle: 'expanded' }).on('error', sass.logError))
+    .pipe(postcss(pluginsExtended))
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(dest(PATH.cssFolder))
+    .pipe(
+      notify({
+        message: ' ---------------------------- main MIN css builded !',
+        sound: false,
+      })
+    )
+    .pipe(browserSync.reload({ stream: true }));
+}
+
+function concatCss() {
+  return src(PATH.cssFiles)
+    .pipe(concat(PATH.cssBundleName))
+    .pipe(dest(PATH.cssFolder));
 }
 
 function concatJs() {
@@ -138,16 +171,19 @@ async function sync() {
 
 function watchFiles() {
   syncInit();
-  watch(PATH.scssFiles, series(scss, scssMin)); // При работе заменить scss -> scssDev
+  watch(PATH.scssFiles, series(scssDev, scssMin)); // При работе заменить scss -> scssDev, заменить входной файл style.min.css -> style.css
   watch(PATH.htmlFiles, sync);
   watch(PATH.jsFiles, sync);
 }
 
-task('concat', concatJs);
+task('cssMin', cssMin);
+task('concatCss', concatCss);
+task('concatJs', concatJs);
 task('uglifyES5', uglifyJsES5);
 task('uglify', uglifyJsES6);
 task('comb', comb);
 task('min', scssMin);
 task('dev', scssDev);
 task('scss', series(scss, scssMin));
+task('scssDev', series(scssDev, scssMin));
 task('watch', watchFiles);
